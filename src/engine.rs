@@ -2,7 +2,6 @@
 /// 
 
 pub mod engine {
-
     extern crate rb; //safe static allocated buffer https://github.com/klingtnet/rb
     use rb::*;
 
@@ -11,8 +10,6 @@ pub mod engine {
         sample_rate: i32,
         output_buffer: SpscRb<f32>, //a single producer single consumer buffer for our output
         //resonator
-
-        
     }
 
     impl AudioEngine {
@@ -41,9 +38,7 @@ pub mod engine {
                 _ => ret_srate = 441000,
             }
             (ret_bsize, ret_srate)
-        }
-
-        
+        }  
     }
 
     impl Drop for AudioEngine {
@@ -51,13 +46,13 @@ pub mod engine {
             println!("Destroying audio engine...")
         }
     }
+    
     /* TODO
     trait RoutesSignal {
         component_list: Vec<AudioFxComponent>,
         fn add_component(...); 
         fn remove_component(...);
     }
-
     impl RoutesSignal for AudioEngine {
         ...
     }

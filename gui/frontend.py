@@ -2,7 +2,6 @@ import sys
 import signal
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from subtractesizer import sum_as_string
 
 app = QApplication([])
 
@@ -50,7 +49,7 @@ class MainWindow(QWidget):
 
     @pyqtSlot(int)
     def on_volume_changed(self, volume):
-        self.label.setText(sum_as_string(volume, 10))
+        self.label.setText("".format(volume))
         
     @pyqtSlot()
     def on_quit_clicked(self):

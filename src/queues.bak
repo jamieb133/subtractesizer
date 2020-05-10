@@ -1,0 +1,20 @@
+
+
+// struct RingBuffer {
+//     head pointer
+//     tail pointer
+//     fn push(v_in: f32);
+//     fn pop(v_out: f32);
+// }
+
+// impl RingBuffer {
+//     fn new($self, size: i32) -> self {
+
+//     }
+//     fn push(v_in: f32) {
+
+//     }
+//     fn pop(v_in: f32) {
+
+//     }
+// }

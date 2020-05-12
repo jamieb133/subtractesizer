@@ -3,7 +3,7 @@
 use std::error::Error;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct GeneratorError {
     details: String
 }
@@ -37,7 +37,7 @@ use rand::*; //TODO: what do we actually need...
 trait Generator {
     fn generate(self) -> f32;
 }
-
+#[derive(Debug, PartialEq)]
 struct Resonator {
     biquad: DirectFormII,
     coeffs: BiquadCoeffs,
@@ -46,7 +46,7 @@ struct Resonator {
 }
 
 impl Resonator {
-    fn new(self) -> Resonator {
+    fn new() -> Resonator {
         let biquad = DirectFormII::new();
         let coeffs = BiquadCoeffs::new();
         Resonator {
@@ -100,3 +100,55 @@ impl Generator for Resonator {
         self.biquad.filter(noise_sample, self.coeffs)
     }
 }
+
+//----------------------------------------------------------------------
+#[test]
+#[allow(non_snake_case)]
+fn resonator_set_cutoff_test_PASS() {
+    let res = Resonator::new();
+    let result = res.set_cutoff(14000); //<nyquist at s_rate = 44.1kHz
+    assert_eq!(result, Ok(()));
+}
+
+#[test]
+#[allow(non_snake_case)]
+fn resonator_set_cutoff_test_FAIL() {
+    let res = Resonator::new();
+    let result = res.set_cutoff(30000);//> nyquist at s_rate = 44.1kHz
+    assert_eq!(result, Err(GeneratorError::new("[ERROR] requested frequency is out of range")));
+}
+
+#[allow(non_snake_case)]
+#[test]
+fn resonator_set_qfactor_test_PASS() {
+    let res = Resonator::new();
+    let result = res.set_qfactor(8.8);
+    assert_eq!(result, Ok(()));
+}
+
+#[allow(non_snake_case)]
+#[test]
+fn resonator_set_qfactor_test_FAIL() {
+    let res = Resonator::new();
+    let result = res.set_qfactor(21.0);
+    assert_eq!(result, Err(GeneratorError::new("[ERROR] Q value out of range")));
+
+}
+
+#[allow(non_snake_case)]
+#[test]
+fn resonator_set_samplerate_test_PASS() {
+    let res = Resonator::new();
+    let result = res.set_samplerate(48000); 
+    assert_eq!(result, Ok(()));
+}
+
+#[allow(non_snake_case)]
+#[test]
+fn resonator_set_samplerate_test_FAIL() {
+    let res = Resonator::new();
+    let result = res.set_samplerate(300000);
+    assert_eq!(result, Err(GeneratorError::new("[ERROR] sample rate out of range")));
+}
+
+

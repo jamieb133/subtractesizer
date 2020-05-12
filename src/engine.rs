@@ -27,8 +27,8 @@ impl AudioEngine {
             temp_val /= 2;
         }
         // 2048 seems reasonable to cover most modern machines/audio backends
-        let mut ret_bsize = if temp_val == 1 { buffer_size } else { 2048 };
-        let mut ret_srate: u32;
+        let ret_bsize = if temp_val == 1 { buffer_size } else { 2048 };
+        let ret_srate: u32;
         match sample_rate {
             //standard sample rates are acceptable
             441000 | 480000 | 960000 => ret_srate = sample_rate,
@@ -58,7 +58,7 @@ impl RoutesSignal for AudioEngine {
 
 // ---------------------------unit tests---------------------------//
 #[test]
-fn new_TEST() {
+fn audio_engine_new_test() {
     let buf_size: usize = 1024;
     let s_rate: u32 = 441000;
     let engine = AudioEngine::new(buf_size, s_rate);
@@ -67,7 +67,7 @@ fn new_TEST() {
 }
 
 #[test]
-fn validate_audio_config_TEST() {
+fn audio_engine_validate_audio_config_test() {
     assert_eq!(AudioEngine::validate_audio_config(1024, 441000), (1024, 441000));
     assert_ne!(AudioEngine::validate_audio_config(2048, 960000), (1024, 441000));
     assert_eq!(AudioEngine::validate_audio_config(4096, 960000), (4096, 960000));

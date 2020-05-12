@@ -1,5 +1,6 @@
 ///
 /// 
+use std::fmt;
 
 pub trait Biquad {
     fn filter(self, v_in: f32, coeffs: BiquadCoeffs) -> f32;
@@ -7,10 +8,11 @@ pub trait Biquad {
 
 pub enum CommonFilters {
     Bandpass,
-    Bandstop,
     Lowpass,
     Highpass,
-    //TODO: implement shelves
+
+    //TODO: bq equations for remaining filters
+    //Bandstop,
     //Highshelve,
     //Lowshelve,
 }
@@ -37,6 +39,7 @@ impl BiquadCoeffs {
     }
 }
 
+#[derive(PartialEq)]
 pub struct DirectFormII {
     //holds state of input and output for delay line
     acc_in: (f32, f32),
@@ -72,8 +75,29 @@ impl Biquad for DirectFormII {
         self.shift_delayline(v_in, accum);
         accum
     }
-    
 }
+    
+impl fmt::Debug for DirectFormII {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirectFormII")
+            .field("acc_in", &self.acc_in)
+            .field("acc_out", &self.acc_out)
+            .finish()
+    }
+}
+
+impl fmt::Debug for BiquadCoeffs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("BiquadCoeffs")
+            .field("a1", &self.a1)
+            .field("a2", &self.a2)
+            .field("b0", &self.b0)
+            .field("b1", &self.b1)
+            .field("b2", &self.b2)
+            .finish()
+    }
+}
+
 
 // TODO: maybe take optional arg for biquad coefficients so we can clone
 // put all these args in struct/enum with generic type arg like in C (so something like Params<T>)
@@ -140,6 +164,7 @@ pub fn calculate_coeffs(filt_type: CommonFilters, cutoff_frequency: u32, q_facto
 
 //TODO: seperate test directory structure, just putting here for now
 // ---------------------------unit tests---------------------------//
+#[allow(non_snake_case)]
 #[test]
 fn calculate_coeffs_TEST() {
     let round_2dp = | input: f32 | { (input * 100.00).round() / 100.0 };
@@ -194,9 +219,9 @@ fn calculate_coeffs_TEST() {
 }
 
 #[test]
-fn DirectFormII_TEST() {
+fn direct_form_ii_filter_test() {
     //TODO: not sure how best to test, just checking it returns 0 if filtering 0...
-    let mut dfii = DirectFormII::new();
+    let dfii = DirectFormII::new();
     let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Highpass, 7500, 0.5, 44100);
     assert_eq!(0.0, dfii.filter(0.0, bq));
 }

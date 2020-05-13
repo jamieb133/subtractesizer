@@ -48,12 +48,12 @@ struct Resonator {
 impl Resonator {
     fn new() -> Resonator {
         let biquad = DirectFormII::new();
-        let coeffs = BiquadCoeffs::new();
+        let mut coeffs: BiquadCoeffs = calculate_coeffs(CommonFilters::Bandpass, 1000, 1.0, 44100);
         Resonator {
             biquad: biquad,
             coeffs: coeffs,
             sample_rate: 44100, //should query system sound for this
-            q_factor: 0.0
+            q_factor: 1.0
         }
     }
     fn set_cutoff(mut self, f_cut: u32) -> Result<(), GeneratorError> {
@@ -96,12 +96,20 @@ impl Resonator {
 impl Generator for Resonator {
     fn generate(self) -> f32 {
         let mut rng = rand::thread_rng();
-        let noise_sample: f32 = rng.gen();
+        let noise_sample: f32 = rng.gen_range(-1.0, 1.0);
         self.biquad.filter(noise_sample, self.coeffs)
     }
 }
 
+impl Copy for Resonator { }
+impl Clone for Resonator {
+    fn clone(&self) -> Resonator {
+        *self
+    }
+}
 //----------------------------------------------------------------------
+use more_asserts::*;
+
 #[test]
 #[allow(non_snake_case)]
 fn resonator_set_cutoff_test_PASS() {
@@ -149,6 +157,22 @@ fn resonator_set_samplerate_test_FAIL() {
     let res = Resonator::new();
     let result = res.set_samplerate(300000);
     assert_eq!(result, Err(GeneratorError::new("[ERROR] sample rate out of range")));
+}
+// TODO: refactor
+#[allow(non_snake_case)]
+#[test]
+fn resonator_generate_PASS() {
+    use itertools::*;
+    let res = Resonator::new();
+    let mut test_buffer: [f32; 256] = [1.0; 256];
+    for i in 0..256 {
+        test_buffer[i] = res.generate();
+    } 
+    //check min and max bounds
+    assert_ge!(1.0, test_buffer.iter().cloned().fold1(f32::max).unwrap());
+    assert_le!(-1.0, test_buffer.iter().cloned().fold1(f32::max).unwrap()); 
+    assert_eq!(false, test_buffer.is_empty()); //check it's not just all zeros
+    for i in 0..256 { print!("{:?}", test_buffer[i]); } //dump buffer in debug mode 
 }
 
 

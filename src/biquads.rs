@@ -17,7 +17,7 @@ pub enum CommonFilters {
     //Lowshelve,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub struct BiquadCoeffs {
     a1: f32,
     a2: f32,
@@ -39,7 +39,7 @@ impl BiquadCoeffs {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub struct DirectFormII {
     //holds state of input and output for delay line
     acc_in: (f32, f32),

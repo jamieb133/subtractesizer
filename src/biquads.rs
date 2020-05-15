@@ -101,13 +101,12 @@ impl fmt::Debug for BiquadCoeffs {
 
 // TODO: maybe take optional arg for biquad coefficients so we can clone
 // put all these args in struct/enum with generic type arg like in C (so something like Params<T>)
-pub fn calculate_coeffs(filt_type: CommonFilters, cutoff_frequency: u32, q_factor: f32, sample_rate: u32) -> BiquadCoeffs {
+pub fn calculate_coeffs(filt_type: CommonFilters, cutoff_frequency: f32, q_factor: f32, sample_rate: u32) -> BiquadCoeffs {
     use std::f32;
     let s_rate = sample_rate as f32;
-    let f_cut = cutoff_frequency as f32;
     match filt_type {
         CommonFilters::Bandpass => {
-            let omega: f32 = (2.0 * std::f32::consts::PI * f_cut) / s_rate;
+            let omega: f32 = (2.0 * std::f32::consts::PI * cutoff_frequency) / s_rate;
             let alpha: f32 = omega.sin() / (2.0 * q_factor);
             let coeffs: BiquadCoeffs;
 
@@ -121,7 +120,7 @@ pub fn calculate_coeffs(filt_type: CommonFilters, cutoff_frequency: u32, q_facto
             return bq;
         },
         CommonFilters::Lowpass => {
-            let omega: f32 = (2.0 * std::f32::consts::PI * f_cut) / s_rate;
+            let omega: f32 = (2.0 * std::f32::consts::PI * cutoff_frequency) / s_rate;
             let alpha: f32 = omega.sin() / (2.0 * q_factor);
             let coeffs: BiquadCoeffs;
 
@@ -135,7 +134,7 @@ pub fn calculate_coeffs(filt_type: CommonFilters, cutoff_frequency: u32, q_facto
             return bq;
         },
         CommonFilters::Highpass => {
-            let omega: f32 = (2.0 * std::f32::consts::PI * f_cut) / s_rate;
+            let omega: f32 = (2.0 * std::f32::consts::PI * cutoff_frequency) / s_rate;
             let alpha: f32 = omega.sin() / (2.0 * q_factor);
             let coeffs: BiquadCoeffs;
 
@@ -188,7 +187,7 @@ fn calculate_coeffs_TEST() {
 
     // high pass (f0 = 1kHz, fs = 44.1kHz, Q = 0.5)
     {
-        let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Highpass, 1000, 0.5, 44100); 
+        let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Highpass, 1000.0, 0.5, 44100); 
         //calculated by hand https://www.w3.org/2011/audio/audio-eq-cookbook.html
         let bq_expected = BiquadCoeffs{a1: -1.98, a2: 0.86, b0: 0.99, b1: -1.99, b2: 0.99};
         let rounded_coeffs: BiquadCoeffs = round_coeffs(bq);
@@ -197,7 +196,7 @@ fn calculate_coeffs_TEST() {
 
     //low pass (f0 = 10Khz, fs = 96Khz, Q = 1.0)
     {
-        let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Lowpass, 10000, 1.0, 96000); 
+        let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Lowpass, 10000.0, 1.0, 96000); 
         //calculated by hand https://www.w3.org/2011/audio/audio-eq-cookbook.html
         let bq_expected = BiquadCoeffs{a1: -1.59, a2: 0.70, b0: 0.10, b1: 0.21, b2: 0.10};
         let rounded_coeffs: BiquadCoeffs = round_coeffs(bq);
@@ -206,7 +205,7 @@ fn calculate_coeffs_TEST() {
 
     //band pass (f0 = 7.5Khz, fs = 48Khz, Q = 3.0)
     {
-        let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Bandpass, 7500, 3.0, 48000); 
+        let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Bandpass, 7500.0, 3.0, 48000); 
         //calculated by hand https://www.w3.org/2011/audio/audio-eq-cookbook.html
         let bq_expected = BiquadCoeffs{a1: -1.11, a2: 0.86, b0: 0.14, b1: 0.0, b2: -0.14};
         let rounded_coeffs: BiquadCoeffs = round_coeffs(bq);
@@ -222,7 +221,7 @@ fn calculate_coeffs_TEST() {
 fn direct_form_ii_filter_test() {
     //TODO: not sure how best to test, just checking it returns 0 if filtering 0...
     let dfii = DirectFormII::new();
-    let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Highpass, 7500, 0.5, 44100);
+    let bq: BiquadCoeffs = calculate_coeffs(CommonFilters::Highpass, 7500.0, 0.5, 44100);
     assert_eq!(0.0, dfii.filter(0.0, bq));
 }
 

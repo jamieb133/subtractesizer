@@ -4,11 +4,11 @@ use std::error::Error;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
-struct GeneratorError {
+pub struct GeneratorError {
     details: String
 }
 impl GeneratorError {
-    fn new(msg: &str) -> GeneratorError {
+    pub fn new(msg: &str) -> GeneratorError {
         GeneratorError{details: msg.to_string()}
     }
 }
@@ -34,11 +34,11 @@ use crate::biquads::{
 extern crate rand;
 use rand::*; //TODO: what do we actually need...
 
-trait Generator {
+pub trait Generator {
     fn generate(self) -> f32;
 }
 #[derive(Debug, PartialEq)]
-struct Resonator {
+pub struct Resonator {
     biquad: DirectFormII,
     coeffs: BiquadCoeffs,
     sample_rate: u32,
@@ -46,9 +46,9 @@ struct Resonator {
 }
 
 impl Resonator {
-    fn new() -> Resonator {
+    pub fn new() -> Resonator {
         let biquad = DirectFormII::new();
-        let mut coeffs: BiquadCoeffs = calculate_coeffs(CommonFilters::Bandpass, 1000, 1.0, 44100);
+        let mut coeffs: BiquadCoeffs = calculate_coeffs(CommonFilters::Bandpass, 1000.0, 1.0, 44100);
         Resonator {
             biquad: biquad,
             coeffs: coeffs,
@@ -56,9 +56,9 @@ impl Resonator {
             q_factor: 1.0
         }
     }
-    fn set_cutoff(mut self, f_cut: u32) -> Result<(), GeneratorError> {
-        let nyquist: u32 = self.sample_rate / 2;
-        if (0..nyquist).contains(&f_cut)  {
+    pub fn set_cutoff(mut self, f_cut: f32) -> Result<(), GeneratorError> {
+        let nyquist: f32 = (self.sample_rate as f32) / 2.0;
+        if f_cut <= nyquist  {
             //TODO: should take reference to coeffs so we'd only be copying on the way out (lifetimes and aw that jazz)
             Ok(self.coeffs = calculate_coeffs(CommonFilters::Bandpass, f_cut, self.q_factor, self.sample_rate))
         } 
@@ -66,7 +66,7 @@ impl Resonator {
             Err(GeneratorError::new("[ERROR] requested frequency is out of range"))
         }
     } 
-    fn set_qfactor(mut self, q_fact: f32) -> Result<(), GeneratorError> {
+    pub fn set_qfactor(mut self, q_fact: f32) -> Result<(), GeneratorError> {
         //TODO: find decouply way to share common accepted range from engine
         let max_q: f32 = 20.0;  
         if (0.0..max_q).contains(&q_fact) {
@@ -77,7 +77,7 @@ impl Resonator {
             Err(GeneratorError::new("[ERROR] Q value out of range"))
         }
     } 
-    fn set_samplerate(mut self, s_rate: u32) -> Result<(), GeneratorError> {
+    pub fn set_samplerate(mut self, s_rate: u32) -> Result<(), GeneratorError> {
         //TODO: same as set_q
         let max_srate: u32 = 196000; //has to be placeholder, if goes wrong audio hardware could crash
         if (0..max_srate).contains(&s_rate) {
@@ -114,7 +114,7 @@ use more_asserts::*;
 #[allow(non_snake_case)]
 fn resonator_set_cutoff_test_PASS() {
     let res = Resonator::new();
-    let result = res.set_cutoff(14000); //<nyquist at s_rate = 44.1kHz
+    let result = res.set_cutoff(14000.0); //<nyquist at s_rate = 44.1kHz
     assert_eq!(result, Ok(()));
 }
 
@@ -122,7 +122,7 @@ fn resonator_set_cutoff_test_PASS() {
 #[allow(non_snake_case)]
 fn resonator_set_cutoff_test_FAIL() {
     let res = Resonator::new();
-    let result = res.set_cutoff(30000);//> nyquist at s_rate = 44.1kHz
+    let result = res.set_cutoff(30000.0);//> nyquist at s_rate = 44.1kHz
     assert_eq!(result, Err(GeneratorError::new("[ERROR] requested frequency is out of range")));
 }
 
@@ -172,7 +172,7 @@ fn resonator_generate_PASS() {
     assert_ge!(1.0, test_buffer.iter().cloned().fold1(f32::max).unwrap());
     assert_le!(-1.0, test_buffer.iter().cloned().fold1(f32::max).unwrap()); 
     assert_eq!(false, test_buffer.is_empty()); //check it's not just all zeros
-    for i in 0..256 { print!("{:?}", test_buffer[i]); } //dump buffer in debug mode 
+    //for i in 0..256 { print!("{:?}", test_buffer[i]); } //dump buffer in debug mode 
 }
 
 
